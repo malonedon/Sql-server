@@ -1,0 +1,93 @@
+import sqlite3
+from socket import *
+
+
+firstname= "malone"
+lastname="Muteyaunga "
+email="malone11muteyaungamail.com "
+phone_number="0738101387"
+password="dondon"
+chats="None"
+friends="Martin, barna, yaxk, man, terry"
+groups="None"
+
+server=socket(AF_INET, SOCK_STREAM)
+hostname="192.168.15.227" #gethostname()
+port=8080
+server.bind((hostname,port))
+server.listen(100)
+print("[+] listening on  {} {} ".format(hostname, port)) 
+conn, addr=server.accept()
+while True:
+    
+    print(f"Connected by:{addr} ")
+    if True:
+        database_name="malone.db"
+        connection=sqlite3.connect(database_name)
+        cursor=connection.cursor()
+        try:
+            print(" creating database")
+            cursor.execute("CREATE TABLE users(firstname, lastname, email, phone_number, password, chats, friends, groups) ")
+        except sqlite3.OperationalError as table_exists:
+            print("database Already exists.. ")
+            pass
+        
+        
+    request=conn.recv(1024)
+    request=request.split(b"\n")
+    if len(request) >=2:
+        request=request [0]
+    print("REQUEST:", request[0].decode("utf-8")) 
+    request =request[0].decode("utf-8")
+    if "INSERT INTO" in request:
+        print("Inserting values into database")
+        #"INSERT INTO users(firstname, lastname, email, phone_number, password, chats, friends, groups) VALUES('malone', 'mute', 'gmail', '071' ,'pass','none','metso','none' )" 
+        cursor.execute(str(request ))
+        connection.commit()
+        response=b"Inserted values into database successfull"
+        conn.send(response)
+        
+        print("home")
+        
+        
+    if "SELECT *" in request:
+        results=[] 
+        cursor.execute(str(request)) 
+        rows=cursor.fetchall()
+        for row in rows:
+            #print(row)
+            results.append(row)
+        response=str(results) 
+        print("RESPONSE:", response)
+        conn.send(response.encode("utf-8"))
+    else:
+        cursor.execute(str(request)) 
+        results =cursor.fetchone()
+        response=str(results) 
+        print("RESPONSE:", response)
+        try:
+            conn.send(response.encode("utf-8"))
+            print("[+] done. ")
+        except:
+            pass
+
+
+
+    
+#conn.close()
+#server.close()
+
+
+
+
+
+
+    
+   
+
+
+cursor.close()
+connection.close()
+
+
+
